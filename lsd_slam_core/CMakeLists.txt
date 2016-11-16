@@ -9,6 +9,10 @@ project(lsd_slam_core)
 #  MinSizeRel : w/o debug symbols, w/ optimization, stripped binaries
 set(CMAKE_BUILD_TYPE Release)
 
+message("PROJECT SOURCE DIRECTORY is ${PROJECT_SOURCE_DIRECTORY}")
+
+SET(CMAKE_MODULE_PATH  cmake)
+
 find_package(cmake_modules REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -20,10 +24,36 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
+
 find_package(Eigen3 REQUIRED)
+
+if(Eigen3_FOUND)
+  message(" --Found Eigen3 package Version ${EIGEN3_VERSION}  EIGEN3_INCLUDE_DIR:${EIGEN3_INCLUDE_DIR}  --")
+  set(Eigen_INCLUDE_DIR ${EIGEN3_INCLUDE_DIR})
+else()
+  message("                   --------------------- Eigen3 package not found ------------------------")
+endif()
+
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+include(cmake/FindSuiteSparse.cmake)
+
+if(CSPARSE_FOUND)
+  message(" ------  Found CSPARSE package  CSPARSE_INCLUDE_DIR:${CSPARSE_INCLUDE_DIR}   ------")
+else()
+  message("                   --------------------- CSPARSE package not found ------------------------")
+endif()
+
+include_directories(${CSPARSE_INCLUDE_DIR})
+
+set(CSPARSE_INCLUDE_DIRS ${CSPARSE_INCLUDE_DIR})
+set(CSPARSE_LIBRARIES ${CSPARSE_LIBRARY})
+
+
 find_package(X11 REQUIRED)
+
 include(cmake/FindG2O.cmake)
-include(cmake/FindSuiteParse.cmake)
+
 
 message("-- CHOLMOD_INCLUDE_DIR : " ${CHOLMOD_INCLUDE_DIR})
 message("-- CSPARSE_INCLUDE_DIR : " ${CSPARSE_INCLUDE_DIR})
@@ -43,7 +73,7 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(
   LIBRARIES lsdslam
-  DEPENDS Eigen3 SuiteSparse
+  DEPENDS EIGEN3 CSPARSE
   CATKIN_DEPENDS libg2o 
 )
 
@@ -93,8 +123,8 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/src
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
-  ${CSPARSE_INCLUDE_DIR} #Has been set by SuiteParse
-  ${CHOLMOD_INCLUDE_DIR} #Has been set by SuiteParse
+  ${CSPARSE_INCLUDE_DIR} #Has been set by SuiteSparse
+  ${CHOLMOD_INCLUDE_DIR} #Has been set by SuiteSparse
 )
 
 
