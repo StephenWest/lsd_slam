@@ -24,6 +24,12 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
+add_message_files(DIRECTORY ../lsd_slam_viewer/msg FILES keyframeMsg.msg keyframeGraphMsg.msg)
+
+generate_messages(
+   DEPENDENCIES 
+   std_msgs
+   )
 
 find_package(Eigen3 REQUIRED)
 
@@ -49,11 +55,9 @@ include_directories(${CSPARSE_INCLUDE_DIR})
 set(CSPARSE_INCLUDE_DIRS ${CSPARSE_INCLUDE_DIR})
 set(CSPARSE_LIBRARIES ${CSPARSE_LIBRARY})
 
-
 find_package(X11 REQUIRED)
 
 include(cmake/FindG2O.cmake)
-
 
 message("-- CHOLMOD_INCLUDE_DIR : " ${CHOLMOD_INCLUDE_DIR})
 message("-- CSPARSE_INCLUDE_DIR : " ${CSPARSE_INCLUDE_DIR})
@@ -70,6 +74,7 @@ generate_dynamic_reconfigure_options(
   cfg/LSDDebugParams.cfg
   cfg/LSDParams.cfg
 )
+
 
 catkin_package(
   LIBRARIES lsdslam
@@ -136,8 +141,12 @@ target_link_libraries(lsdslam ${FABMAP_LIB} ${G2O_LIBRARIES} ${catkin_LIBRARIES}
 
 # build live ros node
 add_executable(live_slam src/main_live_odometry.cpp)
-target_link_libraries(live_slam lsdslam ${catkin_LIBRARIES} ${G2O_LIBRARIES})
 
+## Add cmake target dependencies of the executable/library
+## message headers need to be generated before nodes
+##  add_dependencies(live_slam lsd_slam_core_generate_messages_cpp)
+
+target_link_libraries(live_slam lsdslam ${catkin_LIBRARIES} ${G2O_LIBRARIES})
 
 # build image node
 add_executable(dataset src/main_on_images.cpp)

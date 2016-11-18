@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.4.6)
 project(lsd_slam_viewer)
 
+if(COMMAND cmake_policy)
+      cmake_policy(SET CMP0003 NEW)
+    endif(COMMAND cmake_policy)
+
 # Set the build type. Options are:
 #  Coverage : w/ debug symbols, w/o optimization, w/ code-coverage
 #  Debug : w/ debug symbols, w/o optimization
@@ -24,6 +28,20 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
+add_message_files(DIRECTORY msg FILES keyframeMsg.msg keyframeGraphMsg.msg)
+
+generate_messages(
+   DEPENDENCIES 
+   std_msgs
+   )
+
+generate_dynamic_reconfigure_options(
+  cfg/LSDSLAMViewerParams.cfg
+)
+
+catkin_package()
+
+find_package(Qt4 REQUIRED COMPONENTS QtCore QtGui)
 find_package(OpenGL REQUIRED)
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTXML TRUE)
@@ -32,7 +50,9 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
 
-include_directories(${QGLVIEWER_INCLUDE_DIR}
+include_directories(
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${QGLVIEWER_INCLUDE_DIR}
 		    ${catkin_INCLUDE_DIRS} 
 		    ${EIGEN3_INCLUDE_DIR}
 		    ${QT_INCLUDES} )
@@ -41,14 +61,6 @@ include_directories(${QGLVIEWER_INCLUDE_DIR}
 set(CMAKE_CXX_FLAGS
    "${CMAKE_CXX_FLAGS} -march=native -Wall -std=c++0x"
 )
-
-add_message_files(DIRECTORY msg FILES keyframeMsg.msg keyframeGraphMsg.msg)
-generate_messages(DEPENDENCIES)
-
-generate_dynamic_reconfigure_options(
-  cfg/LSDSLAMViewerParams.cfg
-)
-
 
 # Sources files
 set(SOURCE_FILES         
@@ -70,6 +82,11 @@ include_directories(
 )  
 
 add_executable(viewer src/main_viewer.cpp ${SOURCE_FILES} ${HEADER_FILES})
+
+## Add cmake target dependencies of the executable/library
+## message headers need to be generated before nodes
+add_dependencies(viewer lsd_slam_viewer_generate_messages_cpp)
+
 target_link_libraries(viewer ${QGLViewer_LIBRARIES}
 			     ${QGLVIEWER_LIBRARY} 
 			     ${catkin_LIBRARIES}
